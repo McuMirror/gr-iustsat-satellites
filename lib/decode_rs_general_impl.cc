@@ -1,17 +1,17 @@
 /* -*- c++ -*- */
-/* 
+/*
  * Copyright 2018 Daniel Estevez <daniel@destevez.net>.
- * 
+ *
  * This is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3, or (at your option)
  * any later version.
- * 
+ *
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.  If not, write to
  * the Free Software Foundation, Inc., 51 Franklin Street,
@@ -39,21 +39,22 @@ namespace gr {
   namespace satellites {
 
     decode_rs_general::sptr
-    decode_rs_general::make(int gfpoly, int fcr, int prim, int nroots, bool verbose)
+    decode_rs_general::make(int gfpoly, int fcr, int prim, int nroots, bool verbose, bool output_failed)
     {
       return gnuradio::get_initial_sptr
-        (new decode_rs_general_impl(gfpoly, fcr, prim, nroots, verbose));
+        (new decode_rs_general_impl(gfpoly, fcr, prim, nroots, verbose, output_failed));
     }
 
     /*
      * The private constructor
      */
-    decode_rs_general_impl::decode_rs_general_impl(int gfpoly, int fcr, int prim, int nroots, bool verbose)
+    decode_rs_general_impl::decode_rs_general_impl(int gfpoly, int fcr, int prim, int nroots, bool verbose, bool output_failed)
       : gr::block("decode_rs_general",
 		  gr::io_signature::make(0, 0, 0),
 		  gr::io_signature::make(0, 0, 0))
     {
       d_verbose = verbose;
+      d_output_failed = output_failed;
 
       d_nroots = nroots;
       d_rs = init_rs_char(8, gfpoly, fcr, prim, nroots, 0); // TODO handle error
@@ -96,34 +97,41 @@ namespace gr {
 
       if (frame_len <= d_nroots || frame_len > MAX_FRAME_LEN) {
       	if (d_verbose) {
-	  std::printf("Reed-Solomon decoder: invalid frame length %d\n", frame_len);
-	  return;
-	}
+      	  std::printf("Reed-Solomon decoder: invalid frame length %d\n", frame_len);
+      	  return;
+      	}
       }
 
       memset(data, 0, sizeof(data));
       memcpy(data, pmt::uniform_vector_elements(msg, offset), frame_len);
 
       rs_res = decode_rs_char(d_rs, data, NULL, 0);
+      frame_len -= d_nroots;
 
       // Send via GNUradio message if RS ok
       if (rs_res >= 0) {
-	frame_len -= d_nroots;
+      	if (d_verbose) {
+      	  std::printf("Reed-Solomon decode OK. Bytes corrected: %d.\n", rs_res);
+      	}
 
-	if (d_verbose) {
-	  std::printf("Reed-Solomon decode OK. Bytes corrected: %d.\n", rs_res);
-	}
+        // Send by GNUradio message
+        message_port_pub(pmt::mp("out"),
+           pmt::cons(pmt::PMT_NIL,
+               pmt::init_u8vector(frame_len, data)));
+      } else if (d_verbose) {
+      	std::printf("Reed-Solomon decode failed.\n");
+        
+        if (d_output_failed) {
+          // Send by GNUradio message
+          message_port_pub(pmt::mp("out"),
+            pmt::cons(pmt::PMT_NIL,
+                pmt::init_u8vector(frame_len, data)));
+        }
+      }
 
-	// Send by GNUradio message
-	message_port_pub(pmt::mp("out"),
-			 pmt::cons(pmt::PMT_NIL,
-				   pmt::init_u8vector(frame_len, data)));
-      }
-      else if (d_verbose) {
-	std::printf("Reed-Solomon decode failed.\n");
-      }
+      
+      
     }
-    
+
   } /* namespace satellites */
 } /* namespace gr */
-

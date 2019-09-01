@@ -106,8 +106,8 @@ Data = Select(LongData, ShortData)
 
 Beacon = Struct(\
     Const(b'\x00'),\
-    'beacon_id' / BeaconID * set_delta_min_delay,\
-    'sc_time' / Timestamp * set_last_timestamp,\
+    #'beacon_id' / BeaconID * set_delta_min_delay,\
+    #'sc_time' / Timestamp * set_last_timestamp,\
     'state_of_charge' / Int8ub,\
     'sensor_id' / Int8ub,\
     'data' / GreedyRange(Data))

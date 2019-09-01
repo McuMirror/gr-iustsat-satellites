@@ -30,11 +30,12 @@ namespace gr {
     {
      private:
       bool d_verbose;
+      bool d_output_failed;
       void *d_rs;
       int d_nroots;
 
      public:
-      decode_rs_general_impl(int gfpoly, int fcr, int prim, int nroots, bool verbose);
+      decode_rs_general_impl(int gfpoly, int fcr, int prim, int nroots, bool verbos, bool output_failed);
       ~decode_rs_general_impl();
 
       // Where all the action really happens

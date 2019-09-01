@@ -45,7 +45,7 @@ namespace gr {
        * class. satellites::decode_rs_general::make is the public interface for
        * creating new instances.
        */
-      static sptr make(int gfpoly, int fcr, int prim, int nroots, bool verbose);
+      static sptr make(int gfpoly, int fcr, int prim, int nroots, bool verbose, bool output_failed);
     };
 
   } // namespace satellites

@@ -4,11 +4,25 @@
   <key>satellites_decode_rs_general</key>
   <category>[Satellites]/FEC</category>
   <import>import satellites</import>
-  <make>satellites.decode_rs_general($gfpoly, $fcr, $prim, $nroots, $verbose)</make>
+  <make>satellites.decode_rs_general($gfpoly, $fcr, $prim, $nroots, $verbose, $output_failed)</make>
 
   <param>
     <name>Verbose</name>
     <key>verbose</key>
+    <type>bool</type>
+     <option>
+       <name>Yes</name>
+       <key>True</key>
+     </option>
+     <option>
+       <name>No</name>
+       <key>False</key>
+     </option>
+  </param>
+
+  <param>
+    <name>Out Failed Blocks</name>
+    <key>output_failed</key>
     <type>bool</type>
      <option>
        <name>Yes</name>
